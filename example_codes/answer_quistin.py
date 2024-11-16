@@ -5,8 +5,8 @@ base_url = "http://127.0.0.1:5000/questions/answer"
 
 # Example payload for submitting an answer
 payload = {
-    "wallet_address": "ttt",  # Replace with your actual wallet address
-    "question_id": "5",  # Replace with the question ID you received
+    "wallet_address": "UQCaAgwsCXh4h15FAeQzWN22I655ZFg-JHg-XewLTReGcWNu",  # Replace with your actual wallet address
+    "question_id": "10",  # Replace with the question ID you received
     "answer": "12"  # Replace with the user's answer
 }
 

@@ -6,3 +6,4 @@ load_dotenv()
 
 # Get the MongoDB URI from the .env file
 MONGO_URI = os.getenv("MONGO_URI")
+print(MONGO_URI)

@@ -19,7 +19,7 @@ def register_or_get_user():
         if not wallet_address:
             return jsonify({"success": False, "message": "Wallet address is required."}), 400
 
-        # Check if the user exists, otherwise create a new user
+        # Check if the user exists, otherwise create a new user atomically
         user, status_code = user_service.get_or_create_user(wallet_address)
 
         result = {

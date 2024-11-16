@@ -1,11 +1,8 @@
 class UserModel:
     def __init__(self, db):
         self.collection = db['users']
-        self.ensure_collection_exists()
-
-    def ensure_collection_exists(self):
-        if not self.collection.index_information():
-            self.collection.create_index("wallet_address", unique=True)
+        # Ensure a unique index on wallet_address (if not already created)
+        self.collection.create_index("wallet_address", unique=True)
 
     def find_by_wallet(self, wallet_address):
         return self.collection.find_one({"wallet_address": wallet_address})
@@ -15,14 +12,23 @@ class UserModel:
             "wallet_address": wallet_address,
             "daily_right": 13,
             "eraser": 3,
+            "balance": 0.0,
             "earned_coins": 0.0,  # Only keep earned_coins
             "seen_questions": [],  # Initialize seen_questions as an empty list
             "easy_count": 0,       # Track number of easy questions answered
             "medium_count": 0,     # Track number of medium questions answered
             "hard_count": 0        # Track number of hard questions answered
         }
-        self.collection.insert_one(user_data)
-
+        # Insert user data with error handling for duplicate key errors
+        try:
+            self.collection.insert_one(user_data)
+        except Exception as e:
+            if 'duplicate key error' in str(e):
+                # Handle duplicate user insertion attempt gracefully
+                raise Exception("User already exists")
+            else:
+                # Re-raise other exceptions
+                raise e
 
     def update_user(self, user_data):
         self.collection.update_one(

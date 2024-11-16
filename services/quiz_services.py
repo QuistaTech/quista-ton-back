@@ -8,29 +8,27 @@ class QuizService:
         if not user or user['daily_right'] <= 0:
             return None  # User has no more questions available for today
 
-        # Define daily quota for question difficulties
-        daily_quota = {1: 5, 2: 4, 3: 4}
+        # Define question sequence based on the number of questions seen
+        question_sequence = [1] * 5 + [2] * 3 + [3] * 2 + [4] * 2 + [5] * 1
         seen_questions = user.get('seen_questions', [])
-        available_difficulties = self.get_available_difficulties(user, daily_quota)
+        questions_seen_count = len(seen_questions)
 
-        if not available_difficulties:
+        # If the user has already seen 13 questions, return None
+        if questions_seen_count >= len(question_sequence):
             return None
 
-        for difficulty in available_difficulties:
-            question = self.question_model.find_unseen_question(difficulty, seen_questions)
-            if question:
-                user['seen_questions'].append(question['question_id'])
-                user['daily_right'] -= 1
-                if difficulty == 1:
-                    user['easy_count'] = user.get('easy_count', 0) + 1
-                elif difficulty == 2:
-                    user['medium_count'] = user.get('medium_count', 0) + 1
-                elif difficulty == 3:
-                    user['hard_count'] = user.get('hard_count', 0) + 1
-                self.user_model.update_user(user)
-                return question
+        # Determine the difficulty for the next question based on the sequence
+        next_difficulty = question_sequence[questions_seen_count]
+        question = self.question_model.find_unseen_question(next_difficulty, seen_questions)
+
+        if question:
+            user['seen_questions'].append(question['question_id'])
+            user['daily_right'] -= 1
+            self.user_model.update_user(user)
+            return question
 
         return None
+
 
     def process_answer(self, wallet_address, question_id, selected_option):
         user = self.user_model.find_by_wallet(wallet_address)
@@ -45,37 +43,40 @@ class QuizService:
             return {"success": False, "message": "Invalid question."}, 400
 
         correct_option = question['correct_option']
-        if selected_option == correct_option:
-            points = self.calculate_points(question['difficulty'])
-            user['earned_coins'] += points
-            message = f"Correct answer! You earned {points} points."
+        is_correct_answer = selected_option == correct_option
+        tokens_added = 0
+
+        if is_correct_answer:
+            tokens_added = self.calculate_tokens(question['difficulty'])  # New token logic
+            user['balance'] = user.get('balance', 0) + tokens_added  # Add tokens to user balance
         else:
             if user['eraser'] > 0:
                 user['eraser'] -= 1
-                message = "Incorrect answer, but no points lost due to eraser."
             else:
                 user['earned_coins'] -= 10  # Deduct points or handle as needed
-                message = "Incorrect answer. Points deducted."
-        user['daily_right'] -= 1
-        user['seen_questions'].append(question_id)
+
         self.user_model.update_user(user)
 
         return {
             "success": True,
-            "message": message,
+            "isCorrectAnswer": is_correct_answer,
+            "tokensAdded": tokens_added,
             "user": {
                 "wallet_address": user['wallet_address'],
                 "daily_right": user['daily_right'],
                 "eraser": user['eraser'],
-                "earned_coins": user['earned_coins']
+                "balance": user.get('balance', 0)  # Return balance as part of response
             }
-        }, 200
+    }, 200
+
 
     def get_available_difficulties(self, user, daily_quota):
         difficulty_count = {
             1: user.get('easy_count', 0),
             2: user.get('medium_count', 0),
-            3: user.get('hard_count', 0)
+            3: user.get('hard_count', 0),
+            4: user.get('very_hard_count', 0),
+            5: user.get('legendary_count', 0)
         }
         available_difficulties = []
         for difficulty, max_count in daily_quota.items():
@@ -84,5 +85,9 @@ class QuizService:
         return available_difficulties
 
     def calculate_points(self, difficulty):
-        point_map = {1: 10, 2: 20, 3: 30}
+        point_map = {1: 10, 2: 20, 3: 30, 4: 40, 5: 50}
         return point_map.get(difficulty, 10)
+
+    def calculate_tokens(self, difficulty):
+        token_map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}  # Example token distribution
+        return token_map.get(difficulty, 1)

@@ -64,8 +64,8 @@ def add_question():
             "message": f"An unexpected error occurred: {str(e)}"
         }), 500
 
-@question_blueprint.route('/start_quiz', methods=['POST'])
-def start_quiz():
+@question_blueprint.route('/feed_question', methods=['POST'])
+def feed_question():
     try:
         db = current_app.config['DB']
         quiz_service = get_quiz_service(db)
@@ -87,6 +87,13 @@ def start_quiz():
                 "difficulty": question["difficulty"]
             }
         }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"An unexpected error occurred: {str(e)}"
+        }), 500
+
 
     except Exception as e:
         return jsonify({
