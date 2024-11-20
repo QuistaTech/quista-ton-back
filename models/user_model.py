@@ -15,9 +15,9 @@ class UserModel:
             "balance": 0.0,
             "earned_coins": 0.0,  # Only keep earned_coins
             "seen_questions": [],  # Initialize seen_questions as an empty list
-            "easy_count": 0,       # Track number of easy questions answered
-            "medium_count": 0,     # Track number of medium questions answered
-            "hard_count": 0        # Track number of hard questions answered
+            "easy_count": 0,  # Track number of easy questions answered
+            "medium_count": 0,  # Track number of medium questions answered
+            "hard_count": 0  # Track number of hard questions answered
         }
         # Insert user data with error handling for duplicate key errors
         try:
@@ -51,3 +51,8 @@ class UserModel:
                 user['hard_count'] += 1
 
             self.update_user(user)
+
+    def decrease_balance(self, wallet_address, amount):
+        user = self.find_by_wallet(wallet_address)
+        user["balance"] -= float(amount)
+        self.update_user(user)
