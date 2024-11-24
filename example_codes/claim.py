@@ -6,7 +6,7 @@ base_url = "http://127.0.0.1:5000/web3/claim"
 # Example payload for submitting an answer
 payload = {
     "wallet_address": "UQCaAgwsCXh4h15FAeQzWN22I655ZFg-JHg-XewLTReGcWNu",  # Replace with your actual wallet address
-    "amount": "0.1",  # Replace with the question ID you received
+    "amount": "100",  # Replace with the question ID you received
 }
 
 # Sending the answer request

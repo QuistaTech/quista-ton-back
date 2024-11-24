@@ -1,6 +1,8 @@
 import dotenv
 from tonutils.client import TonapiClient
 from tonutils.wallet import WalletV4R2
+from tonutils.jetton import JettonMaster, JettonWallet
+from pytoniq_core import Address, begin_cell
 import os
 
 
@@ -9,6 +11,7 @@ class Web3Service:
         # Initialize TON client
         dotenv.load_dotenv()
         self.client = TonapiClient(api_key=os.getenv("API_KEY"), is_testnet=True)
+        self.contract_address = "kQDTQgP1605MG0pbowAuSTb5K1vjd4eMQJMtftjqspIHlpMj"
 
         # Load wallet from seed phrase (you can customize how to retrieve this securely)
         mnemonics = os.getenv("MNEMONICS").split(",") if os.getenv("MNEMONICS") else []
@@ -19,11 +22,27 @@ class Web3Service:
 
     async def claim(self, recipient_address, amount):
         try:
-            # Transfer tokens to the recipient address
-            transaction = await self.wallet.transfer(
-                destination=recipient_address,
-                amount=float(amount),  # This amount should be in nanograms (1 TON = 1,000,000,000 nanograms)
+            COMMENT = "Claimed Tokens"
+            JETTON_DECIMALS = 9
+
+            body = JettonWallet.build_transfer_body(
+                recipient_address=Address(recipient_address),
+                response_address=self.wallet.address,
+                jetton_amount=int(amount * (10 ** JETTON_DECIMALS)),
+                forward_payload=(
+                    begin_cell()
+                    .store_uint(0, 32)  # Text comment opcode
+                    .store_snake_string(COMMENT)
+                    .end_cell()
+                ),
+                forward_amount=1,
             )
-            return transaction  # Optionally return transaction info
+            # Transfer tokens to the recipient address
+            tx_hash = await self.wallet.transfer(
+                destination=Address("kQDTQgP1605MG0pbowAuSTb5K1vjd4eMQJMtftjqspIHlpMj"),
+                amount=0.05,
+                body=body,
+            )
+            return tx_hash  # Optionally return transaction info
         except Exception as e:
             return {'error': str(e)}

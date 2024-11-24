@@ -21,11 +21,13 @@ def claim_tokens():
 
         # Get the wallet_address from the incoming request
         wallet_address = request.json.get('wallet_address')
-        amount = request.json.get("amount")
+        user, status_code = user_service.get_or_create_user(wallet_address)
+        amount = user["balance"]
 
-        if not wallet_address or not amount:
-            return jsonify({"success": False, "message": "Wallet address and amount are required."}), 400
-
+        if not wallet_address:
+            return jsonify({"success": False, "message": "Wallet address is required."}), 400
+        if amount == 0.0 or not amount:
+            return jsonify({"success": False, "message": "Zero balance."}), 400
         try:
             # Claim the tokens asynchronously
             tx_hash = asyncio.run(web3_service.claim(wallet_address, amount))
