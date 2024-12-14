@@ -1,3 +1,6 @@
+import math
+
+
 class UserService:
     def __init__(self, user_model):
         self.user_model = user_model
@@ -35,4 +38,13 @@ class UserService:
             "easy_count": user.get("easy_count", 0),
             "medium_count": user.get("medium_count", 0),
             "hard_count": user.get("hard_count", 0),
+            "xp": user.get("xp", 0)
         }
+
+    def calculate_user_level(self, current_xp):
+        constant = 70
+        magic_value = 2.69
+        weekly_xp = 600
+        if current_xp == 0:
+            return 0
+        return math.floor(pow(((constant * current_xp) / weekly_xp), (1 / magic_value)))

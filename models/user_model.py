@@ -17,7 +17,8 @@ class UserModel:
             "seen_questions": [],  # Initialize seen_questions as an empty list
             "easy_count": 0,  # Track number of easy questions answered
             "medium_count": 0,  # Track number of medium questions answered
-            "hard_count": 0  # Track number of hard questions answered
+            "hard_count": 0,  # Track number of hard questions answered
+            "xp": 0
         }
         # Insert user data with error handling for duplicate key errors
         try:
