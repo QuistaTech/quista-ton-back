@@ -3,3 +3,4 @@ pymongo
 flask_cors
 tonutils
 python_dotenv
+typing_extensions
